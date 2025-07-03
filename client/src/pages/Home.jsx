@@ -1,10 +1,30 @@
-import React from "react";
+import React, { useState } from "react";
 import { assets, dummyShowsData } from "../assets/assets";
 import { Link } from "react-router-dom";
 
 const Home = () => {
+    const [showTrailer, setShowTrailer] = useState(false);
+    const heroMovie = dummyShowsData[0];
     return (
         <div className="pt-24 pb-8 min-h-screen bg-black text-white">
+            {/* Trailer Modal */}
+            {showTrailer && heroMovie.trailerUrl && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-80">
+                    <div className="relative w-full max-w-2xl aspect-video bg-black rounded-xl overflow-hidden">
+                        <button onClick={() => setShowTrailer(false)} className="absolute top-2 right-2 z-10 bg-[#232326] text-white rounded-full px-3 py-1 text-lg font-bold hover:bg-[#f84565]">×</button>
+                        <iframe
+                            width="100%"
+                            height="100%"
+                            src={heroMovie.trailerUrl.replace("watch?v=", "embed/")}
+                            title="YouTube trailer"
+                            frameBorder="0"
+                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                            allowFullScreen
+                            className="w-full h-full rounded-xl"
+                        ></iframe>
+                    </div>
+                </div>
+            )}
             {/* Hero Section */}
             <section className="flex flex-col md:flex-row items-center justify-between gap-10 px-6 md:px-16 lg:px-36 py-12">
                 <div className="flex-1 z-10">
@@ -12,15 +32,10 @@ const Home = () => {
                     <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
                         Book Your Next <span className="text-[#f84565]">Movie Night</span> Instantly
                     </h1>
-                    <p className="text-lg text-gray-300 mb-8 max-w-lg">
-                        Discover new releases, trending movies, and seamless ticketing with QuickShow. Your next movie night is just a click away!
-                    </p>
-                    <div className="flex flex-wrap gap-4 mb-6">
-                        <Link to="/movies">
-                            <button className="px-7 py-3 bg-[#f84565] hover:bg-[#d63854] transition rounded-full font-semibold text-lg shadow-lg">
-                                Book Now
-                            </button>
-                        </Link>
+                    <p className="text-lg text-gray-300 mb-8 max-w-xl">Discover new releases, trending movies, and seamless ticketing with QuickShow.</p>
+                    <div className="flex gap-4 mb-8">
+                        <Link to="/movies" className="px-6 py-3 bg-[#f84565] hover:bg-[#d63854] text-white rounded-full font-bold text-lg transition">Book Now</Link>
+                        <button onClick={() => setShowTrailer(true)} className="px-6 py-3 bg-[#232326] hover:bg-[#f84565]/20 text-white rounded-full font-bold text-lg transition">Watch Trailer</button>
                     </div>
                 </div>
                 <div className="flex-1 flex justify-center items-center relative z-0">
