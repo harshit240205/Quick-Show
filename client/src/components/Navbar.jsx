@@ -1,44 +1,74 @@
 import React from "react";
-import { Link } from 'react-router-dom';
-import { assets } from "../assets/assets";
-import { MenuIcon, SearchIcon, XIcon } from "lucide-react";
+import { Link, useLocation } from "react-router-dom";
+import { SearchIcon } from "lucide-react";
 import { SignInButton, useUser, UserButton } from "@clerk/clerk-react";
+import { useApp } from "../lib/AppContext";
 
 const Navbar = () => {
     const { user } = useUser();
+    const location = useLocation();
+    const { favorites, bookings } = useApp();
+
+    const navLinks = [
+        { to: "/", label: "Home" },
+        { to: "/movies", label: "Movies" },
+        { to: "/favorite", label: "Favorites" },
+        { to: "/my-bookings", label: "My Bookings" },
+    ];
+
+    const isActive = (path) => location.pathname === path;
 
     return (
-        <div className="fixed top-0 left-0 z-50 w-full flex items-center justify-between px-6 md:px-16 lg:px-36 py-5">
-            <Link to='/' className="max-md:flex-1">
-                <img src={assets.logo} alt="Logo" className="w-36 h-auto" />
+        <nav className="fixed top-0 left-0 w-full z-50 bg-black flex items-center justify-between px-8 py-4 border-b border-[#18181b]">
+            {/* Logo as styled text */}
+            <Link to="/" className="flex items-center gap-2 select-none">
+                <span className="text-3xl font-extrabold">
+                    <span className="text-[#f84565]">t</span>
+                    <span className="text-white">icketo</span>
+                </span>
             </Link>
 
-            <div className="max-md:absolute max-md:left-0 max-md:font-medium max-md:text-lg z-50 flex-col md:flex-row items-center max-md:justify-center gap-2 md:gap-4 min-md:px-8 py-3 max-md:h-screen min-md:rounded-full backdrop-blur bg-black/70 md:bg-white/10 md:border border-gray-300/20 overflow-hidden transition-[width] duration-300">
-                <XIcon className="md:hidden absolute top-6 right-6 w-6 h-6 cursor-pointer" />
-                <Link to='/' className="px-4 py-2 rounded hover:bg-primary/20 transition font-semibold">Home</Link>
-                <Link to='/movies' className="px-4 py-2 rounded hover:bg-primary/20 transition font-semibold">Movies</Link>
-                <Link to='/' className="px-4 py-2 rounded hover:bg-primary/20 transition font-semibold">Theaters</Link>
-                <Link to='/' className="px-4 py-2 rounded hover:bg-primary/20 transition font-semibold">Releases</Link>
-                <Link to='/favorite' className="px-4 py-2 rounded hover:bg-primary/20 transition font-semibold">Favorites</Link>
-            </div>
-
+            {/* Nav Links */}
             <div className="flex items-center gap-8">
-                <SearchIcon className="max-md:hidden w-6 h-6 cursor-pointer" />
-                {
-                    !user ? (
-                        <SignInButton mode="modal">
-                            <button className="px-4 py-1 sm:px-7 sm:py-2 bg-red-600 hover:bg-primary-dull transition rounded-full font-medium cursor-pointer">
-                                Login
-                            </button>
-                        </SignInButton>
-                    ) : (
-                        <UserButton afterSignOutUrl="/" />
-                    )
-                }
+                {navLinks.map((link) => (
+                    <Link
+                        key={link.to}
+                        to={link.to}
+                        className={`text-lg font-bold transition-colors px-2 py-1 rounded ${
+                            isActive(link.to)
+                                ? "text-[#f84565]"
+                                : "text-white hover:text-[#f84565]"
+                        }`}
+                    >
+                        {link.label}
+                        {link.label === "Favorites" && favorites.length > 0 && (
+                            <span className="ml-2 bg-[#f84565] text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center align-middle">
+                                {favorites.length}
+                            </span>
+                        )}
+                        {link.label === "My Bookings" && bookings.length > 0 && (
+                            <span className="ml-2 bg-[#f84565] text-white text-xs rounded-full px-2 py-0.5 min-w-[20px] text-center align-middle">
+                                {bookings.length}
+                            </span>
+                        )}
+                    </Link>
+                ))}
             </div>
 
-            <MenuIcon className="max-md:ml-4 md:hidden w-8 h-8 cursor-pointer" />
-        </div>
+            {/* Search and User */}
+            <div className="flex items-center gap-6">
+                <SearchIcon className="w-6 h-6 text-white cursor-pointer" />
+                {!user ? (
+                    <SignInButton mode="modal">
+                        <button className="w-8 h-8 rounded-full bg-[#f84565] flex items-center justify-center text-white font-bold text-lg">
+                            ?
+                        </button>
+                    </SignInButton>
+                ) : (
+                    <UserButton afterSignOutUrl="/" />
+                )}
+            </div>
+        </nav>
     );
 };
 

@@ -1,6 +1,9 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { dummyShowsData } from "../assets/assets";
+import { useApp } from "../lib/AppContext";
+import toast from "react-hot-toast";
+import { useUser } from "@clerk/clerk-react";
 
 const timings = [
   "06:30", "09:30", "12:00", "04:30", "08:00"
@@ -22,9 +25,14 @@ const occupied = ["C7", "C8", "D12", "D13", "E5"];
 
 const SeatLayout = () => {
   const { id, date } = useParams();
+  const navigate = useNavigate();
+  const { addBooking } = useApp();
   const movie = dummyShowsData.find(m => String(m.id) === String(id));
   const [selectedTiming, setSelectedTiming] = useState(timings[0]);
   const [selectedSeats, setSelectedSeats] = useState([]);
+  const { user } = useUser();
+
+  if (!movie) return <div className="pt-24 text-center text-white">Movie not found.</div>;
 
   const handleSeatClick = (row, num) => {
     const seatId = `${row}${num}`;
@@ -36,89 +44,152 @@ const SeatLayout = () => {
     );
   };
 
-  return (
-    <div className="pt-24 min-h-screen bg-black text-white flex justify-center items-start px-4 pb-12">
-      {/* Timings Sidebar */}
-      <div className="bg-[#18181b] rounded-xl p-6 mr-12 mt-8 min-w-[180px] shadow-lg">
-        <h3 className="text-lg font-semibold mb-6 text-gray-200">Available Timings</h3>
-        <div className="flex flex-col gap-3">
-          {timings.map((time) => (
-            <button
-              key={time}
-              onClick={() => setSelectedTiming(time)}
-              className={`px-4 py-2 rounded-lg text-left font-medium transition-all border border-transparent ${
-                selectedTiming === time
-                  ? "bg-[#f84565] text-white" : "bg-[#232326] text-gray-300 hover:bg-[#232326]/80"
-              }`}
-            >
-              {time}
-            </button>
-          ))}
-        </div>
-      </div>
+  const handleConfirmBooking = () => {
+    if (!user) {
+      alert("Please login to book tickets.");
+      return;
+    }
+    if (selectedSeats.length === 0) {
+      toast.error("Please select at least one seat");
+      return;
+    }
 
-      {/* Main Seat Layout */}
-      <div className="flex-1 flex flex-col items-center mt-8">
-        <h2 className="text-2xl font-bold mb-2">Select Your Seat</h2>
-        {movie && (
-          <div className="flex items-center gap-4 mb-4">
-            <img src={movie.poster_path} alt={movie.title} className="w-16 h-24 object-cover rounded-lg border border-[#232326]" />
-            <div>
-              <div className="font-bold text-lg">{movie.title}</div>
-              <div className="text-xs text-gray-400">{date}</div>
-            </div>
-          </div>
-        )}
-        <div className="w-full flex flex-col items-center mb-8">
-          <div className="w-72 md:w-[420px] h-2 bg-gradient-to-r from-[#f84565]/30 via-[#f84565]/60 to-[#f84565]/30 rounded-full mb-2 mt-4" />
-          <span className="text-xs text-gray-400 tracking-widest mb-6">SCREEN SIDE</span>
+    // Create booking object
+    const booking = {
+      movieId: movie.id,
+      movieTitle: movie.title,
+      moviePoster: movie.poster_path,
+      date: date,
+      time: "7:00 PM", // Default time
+      seats: selectedSeats
+    };
+
+    addBooking(booking);
+    toast.success(`Successfully booked ${selectedSeats.length} seat(s) for ${movie.title}`);
+    navigate('/my-bookings');
+  };
+
+  return (
+    <div className="pt-24 pb-12 min-h-screen bg-black text-white px-4">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold mb-2">{movie.title}</h1>
+          <p className="text-gray-400">Select your seats for {date}</p>
         </div>
-        <div className="flex flex-col gap-3 mb-10">
-          {seatRows.map((row, idx) => (
-            <div key={row.label} className="flex items-center justify-center gap-2">
-              <span className="w-6 text-right mr-2 text-gray-500 font-mono select-none">{row.label}</span>
-              {[...Array(row.count)].map((_, i) => {
-                const seatNum = i + 1;
-                const seatId = `${row.label}${seatNum}`;
-                const isOccupied = occupied.includes(seatId);
-                const isSelected = selectedSeats.includes(seatId);
-                return (
-                  <button
-                    key={seatId}
-                    onClick={() => handleSeatClick(row.label, seatNum)}
-                    disabled={isOccupied}
-                    className={`w-7 h-7 md:w-8 md:h-8 rounded-md flex items-center justify-center text-xs font-bold mx-0.5 border transition-all
-                      ${isOccupied
-                        ? "bg-[#f84565]/40 border-[#f84565] text-[#f84565] cursor-not-allowed"
-                        : isSelected
-                        ? "bg-[#f84565] border-[#f84565] text-white"
-                        : "bg-[#232326] border-[#232326] text-gray-300 hover:bg-[#f84565]/30 hover:border-[#f84565] hover:text-[#f84565]"}
-                    `}
-                    style={{ boxShadow: isSelected ? "0 0 8px #f84565aa" : undefined }}
-                  >
-                    {seatNum}
-                  </button>
-                );
-              })}
-            </div>
-          ))}
-          {/* Seat numbers below */}
-          <div className="flex items-center justify-center gap-2 mt-2">
-            <span className="w-6" />
-            {[...Array(20)].map((_, i) => (
-              <span key={i} className="w-7 md:w-8 text-xs text-gray-600 text-center select-none">
-                {i < 9 ? i + 1 : i + 1}
-              </span>
+
+        {/* Movie Info */}
+        <div className="bg-[#18181b] rounded-xl p-6 mb-8 flex items-center gap-6">
+          <img 
+            src={movie.poster_path} 
+            alt={movie.title} 
+            className="w-20 h-28 object-cover rounded-lg"
+          />
+          <div>
+            <h3 className="text-xl font-semibold mb-2">{movie.title}</h3>
+            <p className="text-gray-400 text-sm mb-1">Date: {date}</p>
+            <p className="text-gray-400 text-sm mb-1">Time: 7:00 PM</p>
+            <p className="text-gray-400 text-sm">Duration: {movie.runtime} minutes</p>
+          </div>
+        </div>
+
+        {/* Screen */}
+        <div className="text-center mb-8">
+          <div className="bg-gray-600 h-2 rounded-full max-w-2xl mx-auto mb-4"></div>
+          <p className="text-gray-400 text-sm">SCREEN</p>
+        </div>
+
+        {/* Seat Layout */}
+        <div className="max-w-4xl mx-auto mb-8">
+          <div className="grid gap-2">
+            {seatRows.map((row) => (
+              <div key={row.label} className="flex justify-center gap-2">
+                <span className="w-8 text-center text-sm text-gray-400 font-semibold">{row.label}</span>
+                {Array.from({ length: row.count }, (_, i) => {
+                  const seatId = `${row.label}${i + 1}`;
+                  const isSelected = selectedSeats.includes(seatId);
+                  return (
+                    <button
+                      key={seatId}
+                      onClick={() => handleSeatClick(row.label, i + 1)}
+                      className={`w-8 h-8 rounded text-xs font-semibold transition-all ${
+                        isSelected 
+                          ? 'bg-[#f84565] text-white' 
+                          : 'bg-[#232326] text-gray-300 hover:bg-[#f84565]/20 hover:text-[#f84565]'
+                      }`}
+                    >
+                      {i + 1}
+                    </button>
+                  );
+                })}
+              </div>
             ))}
           </div>
         </div>
-        <button
-          className="mt-8 px-8 py-3 bg-[#f84565] hover:bg-[#d63854] transition rounded-full font-semibold text-lg shadow-lg flex items-center gap-2"
-          disabled={selectedSeats.length === 0}
-        >
-          Proceed to checkout
-          <span className="ml-1">→</span>
-        </button>
+
+        {/* Legend */}
+        <div className="flex justify-center gap-8 mb-8 text-sm">
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-[#232326] rounded"></div>
+            <span className="text-gray-400">Available</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-[#f84565] rounded"></div>
+            <span className="text-gray-400">Selected</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <div className="w-6 h-6 bg-gray-600 rounded"></div>
+            <span className="text-gray-400">Occupied</span>
+          </div>
+        </div>
+
+        {/* Booking Summary */}
+        <div className="bg-[#18181b] rounded-xl p-6 mb-8">
+          <h3 className="text-xl font-semibold mb-4">Booking Summary</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between">
+              <span className="text-gray-400">Movie:</span>
+              <span>{movie.title}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Date:</span>
+              <span>{date}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Time:</span>
+              <span>7:00 PM</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Selected Seats:</span>
+              <span>{selectedSeats.length > 0 ? selectedSeats.join(", ") : "None"}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Total Price:</span>
+              <span className="text-[#f84565] font-semibold">${selectedSeats.length * 12}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Action Buttons */}
+        <div className="flex justify-center gap-4">
+          <button 
+            onClick={() => navigate(`/movies/${movie.id}`)}
+            className="px-8 py-3 bg-[#232326] hover:bg-[#f84565]/20 text-white rounded-full font-semibold transition"
+          >
+            Back to Movie
+          </button>
+          <button 
+            onClick={handleConfirmBooking}
+            disabled={selectedSeats.length === 0}
+            className={`px-8 py-3 rounded-full font-semibold transition ${
+              selectedSeats.length > 0 
+                ? 'bg-[#f84565] hover:bg-[#d63854] text-white' 
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
+            }`}
+          >
+            Confirm Booking (${selectedSeats.length * 12})
+          </button>
+        </div>
       </div>
     </div>
   );

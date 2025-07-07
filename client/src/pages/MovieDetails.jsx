@@ -1,6 +1,9 @@
 import React, { useState } from "react";
 import { dummyShowsData } from "../assets/assets";
 import { useParams, useNavigate } from "react-router-dom";
+import { useApp } from "../lib/AppContext";
+import toast from "react-hot-toast";
+import { useUser } from "@clerk/clerk-react";
 
 const today = new Date();
 const getDateStr = (offset) => {
@@ -13,13 +16,49 @@ const dates = Array.from({ length: 7 }, (_, i) => getDateStr(i));
 const MovieDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { addFavorite, removeFavorite, isFavorite, addBooking } = useApp();
   const movie = dummyShowsData.find(m => String(m.id) === String(id));
   const casts = movie?.casts?.slice(0, 6) || [];
   const alsoLike = dummyShowsData.filter(m => String(m.id) !== String(id)).slice(0, 4);
   const [selectedDate, setSelectedDate] = useState(dates[0]);
   const [showTrailer, setShowTrailer] = useState(false);
+  const { user } = useUser();
 
   if (!movie) return <div className="pt-24 text-center text-white">Movie not found.</div>;
+
+  const handleFavoriteToggle = () => {
+    if (!user) {
+      alert("Please login to add movies to favorites.");
+      return;
+    }
+    if (isFavorite(movie.id)) {
+      removeFavorite(movie.id);
+      toast.success(`${movie.title} removed from favorites`);
+    } else {
+      addFavorite(movie);
+      toast.success(`${movie.title} added to favorites`);
+    }
+  };
+
+  const handleBookNow = () => {
+    if (!user) {
+      alert("Please login to book tickets.");
+      return;
+    }
+    // Create a booking object
+    const booking = {
+      movieId: movie.id,
+      movieTitle: movie.title,
+      moviePoster: movie.poster_path,
+      date: selectedDate,
+      time: "7:00 PM", // Default time
+      seats: ["A1", "A2"] // Default seats
+    };
+    
+    addBooking(booking);
+    toast.success(`Successfully booked ${movie.title} for ${selectedDate}`);
+    navigate(`/movies/${movie.id}/${selectedDate}`);
+  };
 
   return (
     <div className="pt-24 pb-12 min-h-screen bg-black text-white px-4">
@@ -49,8 +88,23 @@ const MovieDetails = () => {
             </div>
             <div className="flex gap-3 mb-6">
               <button className="px-6 py-2 bg-[#232326] hover:bg-[#f84565]/20 text-white rounded-full font-semibold transition" disabled>Watch Trailer</button>
-              <button className="px-6 py-2 bg-[#f84565] hover:bg-[#d63854] text-white rounded-full font-semibold transition"
-                onClick={() => navigate(`/movies/${movie.id}/${selectedDate}`)}>
+              <button 
+                className={`px-6 py-2 rounded-full font-semibold transition flex items-center gap-2 ${
+                  isFavorite(movie.id) 
+                    ? 'bg-red-600 hover:bg-red-700 text-white' 
+                    : 'bg-[#232326] hover:bg-[#f84565]/20 text-white'
+                }`}
+                onClick={handleFavoriteToggle}
+              >
+                <svg className="w-5 h-5" fill={isFavorite(movie.id) ? "currentColor" : "none"} viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+                {isFavorite(movie.id) ? 'Remove from Favorites' : 'Add to Favorites'}
+              </button>
+              <button 
+                className="px-6 py-2 bg-[#f84565] hover:bg-[#d63854] text-white rounded-full font-semibold transition"
+                onClick={handleBookNow}
+              >
                 Book Now
               </button>
             </div>
@@ -72,8 +126,10 @@ const MovieDetails = () => {
               </button>
             ))}
           </div>
-          <button className="px-8 py-3 bg-[#f84565] hover:bg-[#d63854] text-white rounded-full font-semibold text-lg transition"
-            onClick={() => navigate(`/movies/${movie.id}/${selectedDate}`)}>
+          <button 
+            className="px-8 py-3 bg-[#f84565] hover:bg-[#d63854] text-white rounded-full font-semibold text-lg transition"
+            onClick={handleBookNow}
+          >
             Book Now
           </button>
         </div>

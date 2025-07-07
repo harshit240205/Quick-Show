@@ -41,7 +41,7 @@ const Footer = () => {
                         <span className="text-2xl font-bold text-white">uickShow</span>
                     </div>
                     <p className="text-gray-400 text-sm mb-4 max-w-xs">
-                        Book your favorite movies, discover new releases, and enjoy seamless ticketing with QuickShow. Your next movie night is just a click away!
+                        Book your favorite movies, discover new releases, and enjoy seamless ticketing with ticketo. Your next movie night is just a click away!
                     </p>
                     <div className="flex gap-3 mt-4">
                         <a href="#" className="inline-block">
@@ -74,7 +74,7 @@ const Footer = () => {
                     <h3 className="font-semibold text-lg mb-3 tracking-wide">Get in touch</h3>
                     <ul className="space-y-2 text-gray-300 text-sm mb-4">
                         <li>+1-212-456-7890</li>
-                        <li>contact@quickshow.com</li>
+                        <li>contact@ticketo.com</li>
                     </ul>
                     <form className="flex items-center bg-[#232326] rounded-full px-2 py-1 mt-2 shadow-inner max-w-xs">
                         <input
@@ -99,7 +99,7 @@ const Footer = () => {
                         <path d="M3 12h18"/>
                     </svg>
                 </span>
-                Copyright {new Date().getFullYear()} © QuickShow. All Rights Reserved.
+                Copyright {new Date().getFullYear()} © ticketo. All Rights Reserved.
             </div>
         </footer>
     );

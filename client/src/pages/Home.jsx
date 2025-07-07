@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { assets, dummyShowsData } from "../assets/assets";
 import { Link } from "react-router-dom";
+import UserProfile from "../components/UserProfile";
 
 const Home = () => {
     const [showTrailer, setShowTrailer] = useState(false);
@@ -28,11 +29,11 @@ const Home = () => {
             {/* Hero Section */}
             <section className="flex flex-col md:flex-row items-center justify-between gap-10 px-6 md:px-16 lg:px-36 py-12">
                 <div className="flex-1 z-10">
-                    <img src={assets.logo} alt="QuickShow Logo" className="w-48 mb-6" />
+                    <img src={assets.logo} alt="ticketo Logo" className="w-48 mb-6" />
                     <h1 className="text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
                         Book Your Next <span className="text-[#f84565]">Movie Night</span> Instantly
                     </h1>
-                    <p className="text-lg text-gray-300 mb-8 max-w-xl">Discover new releases, trending movies, and seamless ticketing with QuickShow.</p>
+                    <p className="text-lg text-gray-300 mb-8 max-w-xl">Discover new releases, trending movies, and seamless ticketing with ticketo.</p>
                     <div className="flex gap-4 mb-8">
                         <Link to="/movies" className="px-6 py-3 bg-[#f84565] hover:bg-[#d63854] text-white rounded-full font-bold text-lg transition">Book Now</Link>
                         <button onClick={() => setShowTrailer(true)} className="px-6 py-3 bg-[#232326] hover:bg-[#f84565]/20 text-white rounded-full font-bold text-lg transition">Watch Trailer</button>
@@ -41,6 +42,11 @@ const Home = () => {
                 <div className="flex-1 flex justify-center items-center relative z-0">
                     <img src={assets.screenImage} alt="Cinema Screen" className="w-full max-w-md opacity-90" />
                 </div>
+            </section>
+
+            {/* User Profile Section */}
+            <section className="max-w-7xl mx-auto px-6 md:px-0 mt-10 mb-10">
+                <UserProfile />
             </section>
 
             {/* Trending Movies */}
